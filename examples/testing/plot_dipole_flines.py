@@ -1,9 +1,6 @@
 """
-Dipole source solution
-======================
-
-A simple example showing how to use pfsspy to compute the solution to a dipole
-source field.
+Analytic dipole field lines
+===========================
 """
 
 ###############################################################################
@@ -36,6 +33,9 @@ rss = 2
 
 
 def theta_fline(r, theta0, r0):
+    """
+    Analytic solution for a field line in a dipole PFSS solution.
+    """
     z = r / const.R_sun / rss
     z0 = r0 / const.R_sun / rss
     return np.arccos(np.cos(theta0) *
@@ -45,29 +45,32 @@ def theta_fline(r, theta0, r0):
                      )
 
 
+###############################################################################
+# Calculate PFSS solution
 pfsspy_out = pffspy_output(nphi, ns, nr, rss, l, m)
 
-phi = 180 * u.deg
-theta0 = np.linspace(31, 33, 10) * u.deg
-r0 = 1 * const.R_sun
-seeds = SkyCoord(radius=r0, lat=theta0, lon=phi, frame=pfsspy_out.coordinate_frame)
 
-tracer = tracing.FortranTracer(step_size=0.005)
+###############################################################################
+# Trace some field lines
+phi = 180 * u.deg
+theta0 = np.linspace(0, 90, 90) * u.deg
+r0 = rss * const.R_sun
+seeds = SkyCoord(radius=r0, lat=theta0, lon=phi,
+                 frame=pfsspy_out.coordinate_frame)
+
+tracer = tracing.FortranTracer(step_size=0.1)
 flines = tracer.trace(seeds, pfsspy_out)
 
+###
+# Calculate analytical solution
 thetas = [theta_fline(fline.coords.radius, theta, r0) for
           fline, theta in zip(flines, theta0)]
 
-fig, axs = plt.subplots(nrows=2, sharex=True)
+
+fig, ax = plt.subplots()
 for fline, theta in zip(flines, thetas):
-    r = (fline.coords.radius).to(const.R_sun)
-    theta_analytic = theta.to(u.deg) * np.sign(fline.coords.lat)
-
-    ax = axs[0]
-    ax.plot(r, fline.coords.lat.to(u.deg))
-    ax.plot(r, theta_analytic, color='k')
-
-    ax = axs[1]
-    ax.plot(r, fline.coords.lat.to(u.deg) - theta_analytic)
-
+    ax.scatter(fline.coords.lat[-1],
+               (theta[0] - fline.coords.lat[0]).to_value(u.deg))
+ax.set_xlabel('Source surface seed latitude')
+ax.set_ylabel('Difference in solar suface latitude (deg)')
 plt.show()

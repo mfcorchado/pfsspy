@@ -54,26 +54,35 @@ theta, phi = theta * u.rad, phi * u.deg
 r0 = rss * const.R_sun
 seeds = SkyCoord(radius=r0, lat=theta.ravel(), lon=phi.ravel(),
                  frame=pfsspy_out.coordinate_frame)
-# Trace
-tracer = tracing.FortranTracer(step_size=0.01)
-flines = tracer.trace(seeds, pfsspy_out)
-mask = flines.connectivities.astype(bool).reshape(theta.shape)
-
-theta_ss = np.ones_like(theta) * np.nan
-theta_ss[mask] = flines.open_field_lines.solar_feet.lat
-r_out = np.ones_like(theta.value) * const.R_sun * np.nan
-r_out[mask] = flines.open_field_lines.solar_feet.radius
-
-###############################################################################
-# Calculate analytical solution
-theta_analytic = np.ones(theta.size)
-theta_analytic = np.arcsin(np.sin(theta) * fr(r_out.to_value(const.R_sun)))
 
 fig, ax = plt.subplots()
+step_sizes = [1, 0.5, 0.2, 0.1, 0.05]
+dthetas = []
+for step_size in step_sizes:
+    # Trace
+    tracer = tracing.FortranTracer(step_size=step_size)
+    flines = tracer.trace(seeds, pfsspy_out)
+    mask = flines.connectivities.astype(bool).reshape(theta.shape)
+
+    theta_ss = np.ones_like(theta) * np.nan
+    theta_ss[mask] = flines.open_field_lines.solar_feet.lat
+    r_out = np.ones_like(theta.value) * const.R_sun * np.nan
+    r_out[mask] = flines.open_field_lines.solar_feet.radius
+
+    ###############################################################################
+    # Calculate analytical solution
+    theta_analytic = np.ones(theta.size)
+    theta_analytic = np.arcsin(np.sin(theta) * fr(r_out.to_value(const.R_sun)))
+    dthetas.append(np.nanmean(np.abs(theta_ss - theta_analytic)).to_value(u.deg))
+
+ax.plot(step_sizes, dthetas, marker='o')
+ax.set_xscale('log')
+ax.set_yscale('log')
+'''
 im = ax.imshow((theta_ss - theta_analytic).to_value(u.deg), cmap='RdBu', extent=[0, 360, 0, 180])
 ax.set_title(r'Solar surface $\theta_{traced} - \theta_{analytic}$')
 fig.colorbar(im, label='deg')
 
 print(np.nanmean(np.abs(theta_ss - theta_analytic)).to(u.deg))
-
+'''
 plt.show()

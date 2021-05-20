@@ -57,26 +57,35 @@ seeds = SkyCoord(radius=r0, lat=theta.ravel(), lon=phi.ravel(),
 
 fig, ax = plt.subplots()
 step_sizes = [1, 0.5, 0.2, 0.1, 0.05]
+# step_sizes = [1, 0.5]
 dthetas = []
 for step_size in step_sizes:
+    print(f'Tracing {step_size}...')
     # Trace
     tracer = tracing.FortranTracer(step_size=step_size)
     flines = tracer.trace(seeds, pfsspy_out)
+    # Set a mask of open field lines
     mask = flines.connectivities.astype(bool).reshape(theta.shape)
 
+    # Get source surface latitude
     theta_ss = np.ones_like(theta) * np.nan
     theta_ss[mask] = flines.open_field_lines.solar_feet.lat
     r_out = np.ones_like(theta.value) * const.R_sun * np.nan
     r_out[mask] = flines.open_field_lines.solar_feet.radius
 
-    ###############################################################################
+    ###########################################################################
     # Calculate analytical solution
-    theta_analytic = np.ones(theta.size)
     theta_analytic = np.arcsin(np.sin(theta) * fr(r_out.to_value(const.R_sun)))
-    dthetas.append(np.nanmean(np.abs(theta_ss - theta_analytic)).to_value(u.deg))
+    dtheta = (theta_ss - theta_analytic).to_value(u.deg).ravel()
+    dtheta = dtheta[np.isfinite(dtheta)]
+    dthetas.append(dtheta)
 
-ax.plot(step_sizes, dthetas, marker='o')
-ax.set_xscale('log')
+for step_size, dtheta in zip(step_sizes, dthetas):
+    pctiles = np.percentile(np.abs(dtheta), [1, 50, 99])
+    ax.errorbar(step_size, pctiles[1], yerr=[[pctiles[1] - pctiles[0]],
+                                             [pctiles[2] - pctiles[1]]],
+                color='tab:blue', marker='o')
+
 ax.set_yscale('log')
 '''
 im = ax.imshow((theta_ss - theta_analytic).to_value(u.deg), cmap='RdBu', extent=[0, 360, 0, 180])

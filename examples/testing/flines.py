@@ -47,7 +47,8 @@ pfsspy_out = pffspy_output(nphi, ns, nr, rss, l, m)
 n = 90
 # Create 1D theta, phi arrays
 phi = np.linspace(0, 360, n * 2)
-theta = np.arcsin(np.linspace(-1, 1, n))
+phi = phi[:-1] + np.diff(phi) / 2
+theta = np.arcsin(np.linspace(-1, 1, n, endpoint=False) + 1/n)
 # Mesh into 2D arrays
 theta, phi = np.meshgrid(theta, phi, indexing='ij')
 theta, phi = theta * u.rad, phi * u.deg
@@ -56,7 +57,8 @@ seeds = SkyCoord(radius=r0, lat=theta.ravel(), lon=phi.ravel(),
                  frame=pfsspy_out.coordinate_frame)
 
 fig, ax = plt.subplots()
-step_sizes = [1, 0.5, 0.2, 0.1, 0.05]
+step_sizes = [1, 0.5, 0.2, 0.1, 0.05, 0.01]
+step_sizes = np.geomspace(0.01, 1, 10)
 # step_sizes = [1, 0.5]
 dthetas = []
 for step_size in step_sizes:
@@ -77,16 +79,18 @@ for step_size in step_sizes:
     # Calculate analytical solution
     theta_analytic = np.arcsin(np.sin(theta) * fr(r_out.to_value(const.R_sun)))
     dtheta = (theta_ss - theta_analytic).to_value(u.deg).ravel()
+    # dtheta = dtheta[np.abs(theta.ravel()) < 60 * u.deg]
     dtheta = dtheta[np.isfinite(dtheta)]
     dthetas.append(dtheta)
 
-for step_size, dtheta in zip(step_sizes, dthetas):
-    pctiles = np.percentile(np.abs(dtheta), [1, 50, 99])
-    ax.errorbar(step_size, pctiles[1], yerr=[[pctiles[1] - pctiles[0]],
-                                             [pctiles[2] - pctiles[1]]],
-                color='tab:blue', marker='o')
+ax.plot(step_sizes, [np.median(np.abs(dt)) for dt in dthetas], marker='o', label='Median')
+ax.plot(step_sizes, [np.max(np.abs(dt)) for dt in dthetas], marker=11, lw=0.5, color='tab:blue', label='Max')
 
+ax.set_xscale('log')
 ax.set_yscale('log')
+ax.set_xlabel('Step size')
+ax.set_ylabel('$|d\theta|$ (deg)')
+ax.legend()
 '''
 im = ax.imshow((theta_ss - theta_analytic).to_value(u.deg), cmap='RdBu', extent=[0, 360, 0, 180])
 ax.set_title(r'Solar surface $\theta_{traced} - \theta_{analytic}$')

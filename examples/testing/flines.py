@@ -59,7 +59,7 @@ seeds = SkyCoord(radius=r0, lat=theta.ravel(), lon=phi.ravel(),
 fig, ax = plt.subplots()
 step_sizes = [1, 0.5, 0.2, 0.1, 0.05, 0.01]
 step_sizes = np.geomspace(0.01, 1, 10)
-# step_sizes = [1, 0.5]
+step_sizes = [1, 0.5]
 dthetas = []
 for step_size in step_sizes:
     print(f'Tracing {step_size}...')

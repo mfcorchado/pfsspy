@@ -54,7 +54,7 @@ seeds = SkyCoord(radius=r0, lat=theta.ravel(), lon=phi.ravel(),
 fig, ax = plt.subplots()
 step_sizes = [1, 0.5, 0.2, 0.1, 0.05, 0.01]
 step_sizes = np.geomspace(0.01, 1, 10)
-step_sizes = [1, 0.5]
+step_sizes = [1]
 dthetas = []
 for step_size in step_sizes:
     print(f'Tracing {step_size}...')
@@ -65,15 +65,15 @@ for step_size in step_sizes:
     mask = flines.connectivities.astype(bool).reshape(theta.shape)
 
     # Get source surface latitude
-    theta_ss = np.ones_like(theta) * np.nan
-    theta_ss[mask] = flines.open_field_lines.solar_feet.lat
+    theta_solar = np.ones_like(theta) * np.nan
+    theta_solar[mask] = flines.open_field_lines.solar_feet.lat
     r_out = np.ones_like(theta.value) * const.R_sun * np.nan
     r_out[mask] = flines.open_field_lines.solar_feet.radius
 
     ###########################################################################
     # Calculate analytical solution
     theta_analytic = np.arcsin(np.sin(theta) * fr(r_out.to_value(const.R_sun), rss, l))
-    dtheta = (theta_ss - theta_analytic).to_value(u.deg).ravel()
+    dtheta = (theta_solar - theta_analytic).to_value(u.deg).ravel()
     # dtheta = dtheta[np.abs(theta.ravel()) < 60 * u.deg]
     dtheta = dtheta[np.isfinite(dtheta)]
     dthetas.append(dtheta)

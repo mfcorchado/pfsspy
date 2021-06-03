@@ -19,7 +19,7 @@ import pfsspy
 import pfsspy.coords as coords
 from pfsspy import analytic, tracing
 
-from helpers import pffspy_output, fr
+from helpers import pffspy_output, fr, theta_fline_coords
 
 ###############################################################################
 # Compare the the pfsspy solution to the analytic solutions. Cuts are taken
@@ -52,9 +52,7 @@ seeds = SkyCoord(radius=r0, lat=theta.ravel(), lon=phi.ravel(),
                  frame=pfsspy_out.coordinate_frame)
 
 fig, ax = plt.subplots()
-step_sizes = [1, 0.5, 0.2, 0.1, 0.05, 0.01]
-step_sizes = np.geomspace(0.01, 1, 10)
-step_sizes = [1]
+step_sizes = [10, 5, 2, 1, 0.5, 0.2]
 dthetas = []
 for step_size in step_sizes:
     print(f'Tracing {step_size}...')
@@ -72,8 +70,10 @@ for step_size in step_sizes:
 
     ###########################################################################
     # Calculate analytical solution
-    theta_analytic = np.arcsin(np.sin(theta) * fr(r_out.to_value(const.R_sun), rss, l))
-    dtheta = (theta_solar - theta_analytic).to_value(u.deg).ravel()
+    # theta_analytic = np.arcsin(np.sin(theta) * fr(r_out.to_value(const.R_sun), rss, l))
+    theta_analytic = theta_fline_coords(r_out.to_value(const.R_sun), rss, l, m, theta)
+    dtheta = (theta_solar - theta_analytic).to_value(u.deg)# .ravel()
+
     # dtheta = dtheta[np.abs(theta.ravel()) < 60 * u.deg]
     dtheta = dtheta[np.isfinite(dtheta)]
     dthetas.append(dtheta)

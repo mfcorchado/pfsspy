@@ -9,7 +9,7 @@ from pfsspy import analytic
 
 
 
-def theta_phi(nphi, ns):
+def theta_phi_grid(nphi, ns):
     # Return a theta, phi grid with a given numer of points
     phi = np.linspace(0, 2 * np.pi, nphi)
     s = np.linspace(-1, 1, ns)
@@ -20,7 +20,7 @@ def theta_phi(nphi, ns):
 
 def pffspy_output(nphi, ns, nrho, rss, l, m):
     # Return the pfsspy solution for given input parameters
-    theta, phi = theta_phi(nphi, ns)
+    theta, phi = theta_phi_grid(nphi, ns)
 
     br_in = analytic.Br(l, m, rss)(1, theta, phi)
 
@@ -32,13 +32,15 @@ def pffspy_output(nphi, ns, nrho, rss, l, m):
 
 
 def brss_pfsspy(nphi, ns, nrho, rss, l, m):
+    # Return the radial component of the source surface mangetic field
+    # for given input parameters
     pfsspy_out = pffspy_output(nphi, ns, nrho, rss, l, m)
     return pfsspy_out.bc[0][:, :, -1].T
 
 
 def brss_analytic(nphi, ns, rss, l, m):
     # Return the analytic solution for given input parameters
-    theta, phi = theta_phi(nphi, ns)
+    theta, phi = theta_phi_grid(nphi, ns)
     return analytic.Br(l, m, rss)(rss, theta, phi).T
 
 

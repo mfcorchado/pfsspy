@@ -19,7 +19,7 @@ import pfsspy
 import pfsspy.coords as coords
 from pfsspy import analytic, tracing
 
-from helpers import pffspy_output
+from helpers import pffspy_output, fr
 
 ###############################################################################
 # Compare the the pfsspy solution to the analytic solutions. Cuts are taken
@@ -30,11 +30,6 @@ nphi = 360
 ns = 180
 nr = 50
 rss = 2
-
-
-def fr(r):
-    rho = r / rss
-    return ((rho**l * (2*l + 1)) / ((l * rho**(2*l + 1)) + l + 1))**(1 / (l + 1))
 
 
 ###############################################################################
@@ -77,7 +72,7 @@ for step_size in step_sizes:
 
     ###########################################################################
     # Calculate analytical solution
-    theta_analytic = np.arcsin(np.sin(theta) * fr(r_out.to_value(const.R_sun)))
+    theta_analytic = np.arcsin(np.sin(theta) * fr(r_out.to_value(const.R_sun), rss, l))
     dtheta = (theta_ss - theta_analytic).to_value(u.deg).ravel()
     # dtheta = dtheta[np.abs(theta.ravel()) < 60 * u.deg]
     dtheta = dtheta[np.isfinite(dtheta)]

@@ -70,27 +70,31 @@ for step_size in step_sizes:
 
     ###########################################################################
     # Calculate analytical solution
-    # theta_analytic = np.arcsin(np.sin(theta) * fr(r_out.to_value(const.R_sun), rss, l))
     theta_analytic = theta_fline_coords(r_out.to_value(const.R_sun), rss, l, m, theta)
-    dtheta = (theta_solar - theta_analytic).to_value(u.deg)# .ravel()
+    dtheta = (theta_solar - theta_analytic).to_value(u.deg)
 
-    # dtheta = dtheta[np.abs(theta.ravel()) < 60 * u.deg]
+    fig, ax = plt.subplots()
+    im = ax.pcolormesh(phi.to_value(u.deg), np.sin(theta).value, dtheta,
+                       cmap='RdBu')
+    ax.set_aspect(360 / 4)
+    fig.colorbar(im)
+    ax.set_title(f'Step size = {step_size}')
+
     dtheta = dtheta[np.isfinite(dtheta)]
     dthetas.append(dtheta)
 
-ax.plot(step_sizes, [np.median(np.abs(dt)) for dt in dthetas], marker='o', label='Median')
-ax.plot(step_sizes, [np.max(np.abs(dt)) for dt in dthetas], marker=11, lw=0.5, color='tab:blue', label='Max')
+fig, ax = plt.subplots()
+ax.plot(step_sizes, [np.median(np.abs(dt)) for dt in dthetas],
+        marker='o',
+        label='Median')
+ax.plot(step_sizes, [np.max(np.abs(dt)) for dt in dthetas],
+        marker=11, lw=0.5, color='tab:blue',
+        label='Max')
 
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_xlabel('Step size')
 ax.set_ylabel('$|d\theta|$ (deg)')
 ax.legend()
-'''
-im = ax.imshow((theta_ss - theta_analytic).to_value(u.deg), cmap='RdBu', extent=[0, 360, 0, 180])
-ax.set_title(r'Solar surface $\theta_{traced} - \theta_{analytic}$')
-fig.colorbar(im, label='deg')
 
-print(np.nanmean(np.abs(theta_ss - theta_analytic)).to(u.deg))
-'''
 plt.show()

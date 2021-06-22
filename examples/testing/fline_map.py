@@ -10,18 +10,18 @@ import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
 from astropy.visualization import quantity_support
+
 quantity_support()
 
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
-
 import numpy as np
 import sunpy.map
+from matplotlib.gridspec import GridSpec
+
 import pfsspy
 import pfsspy.coords as coords
+from helpers import fr, pffspy_output, phi_fline_coords, theta_fline_coords
 from pfsspy import analytic, tracing
-
-from helpers import pffspy_output, fr, theta_fline_coords, phi_fline_coords
 
 ###############################################################################
 # Compare the the pfsspy solution to the analytic solutions. Cuts are taken
@@ -78,11 +78,11 @@ dphi = phi_solar - phi_analytic
 
 fig, axs = plt.subplots(nrows=2)
 
+kwargs = dict(cmap='RdBu')
 # Latitude
 ax = axs[0]
 im = ax.pcolormesh(phi.to_value(u.deg), np.sin(theta).value,
-                   dtheta.to_value(u.deg),
-                   cmap='RdBu')
+                   dtheta.to_value(u.deg), **kwargs)
 ax.set_aspect(360 / 4)
 fig.colorbar(im, aspect=10, ax=ax,
              label=r'$\theta_{pfsspy} - \theta_{analytic}$ (deg)')
@@ -91,8 +91,7 @@ ax.set_title(f'Error in solar footpoint latitude')
 # Longitude
 ax = axs[1]
 im = ax.pcolormesh(phi.to_value(u.deg), np.sin(theta).value,
-                   dphi.to_value(u.deg),
-                   cmap='RdBu')
+                   dphi.to_value(u.deg), **kwargs)
 ax.set_aspect(360 / 4)
 fig.colorbar(im, aspect=10, ax=ax,
              label=r'$\phi_{pfsspy} - \phi_{analytic}$ (deg)')

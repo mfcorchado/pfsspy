@@ -145,7 +145,9 @@ def Br(l, m, zss):
     sph, t, p = _real_spherical_harmonic_sympy(l, m)
     sph = sympy.lambdify((t, p), sph, _extras)
 
-    def f(z, theta, phi):
+    @u.quantity_input
+    def f(z, theta: u.deg, phi: u.deg):
+        theta, phi = _normalise_angles(theta, phi)
         return _c(l, zss)(z) * np.real(sph(theta, phi))
 
     return f

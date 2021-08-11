@@ -8,7 +8,6 @@ import pfsspy.utils
 from pfsspy import analytic
 
 
-
 def theta_phi_grid(nphi, ns):
     # Return a theta, phi grid with a given numer of points
     phi = np.linspace(0, 2 * np.pi, nphi)

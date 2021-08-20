@@ -9,12 +9,11 @@ import astropy.constants as const
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
-from astropy.visualization import quantity_support
-quantity_support()
 
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
+import pandas as pd
 import numpy as np
 import sunpy.map
 import pfsspy
@@ -26,11 +25,11 @@ from helpers import pffspy_output, fr, theta_fline_coords, phi_fline_coords
 ###############################################################################
 # Compare the the pfsspy solution to the analytic solutions. Cuts are taken
 # on the source surface at a constant phi value to do a 1D comparison.
-l = 1
+l = 2
 m = 1
 nphi = 360
 ns = 180
-nr = 50
+nr = 40
 rss = 2
 
 
@@ -52,7 +51,7 @@ theta, phi = theta * u.rad, phi * u.deg
 seeds = SkyCoord(radius=rss, lat=theta.ravel(), lon=phi.ravel(),
                  frame=pfsspy_out.coordinate_frame)
 
-step_sizes = [50, 40, 30, 20, 10, 5, 2, 1, 0.5]
+step_sizes = [40, 30, 20, 15, 12, 10, 5, 2]
 dthetas = []
 dphis = []
 for step_size in step_sizes:
@@ -77,37 +76,14 @@ for step_size in step_sizes:
     dtheta = (theta_solar - theta_analytic).to_value(u.deg)
     phi_analytic = phi_fline_coords(r_out, rss, l, m, theta, phi)
     dphi = (phi_solar - phi_analytic).to_value(u.deg)
+    # Wrap phi values
+    dphi[dphi > 180] -= 360
+    dphi[dphi < -180] += 360
 
-    '''fig, ax = plt.subplots()
-    im = ax.pcolormesh(phi.to_value(u.deg), np.sin(theta).value, dphi,
-                       cmap='RdBu')
-    ax.set_aspect(360 / 4)
-    fig.colorbar(im)
-    ax.set_title(f'Step size = {step_size}')'''
+    dthetas.append(dtheta.ravel())
+    dphis.append(dphi.ravel())
 
-    dtheta = dtheta[np.isfinite(dtheta)]
-    dthetas.append(dtheta)
-    dphi = dphi[np.isfinite(dphi)]
-    dphis.append(dphi)
-
-fig, ax = plt.subplots()
-ax.plot(step_sizes, [np.median(np.abs(dt)) for dt in dthetas],
-        marker='o',
-        label=r'$\Delta \theta$ median')
-ax.plot(step_sizes, [np.max(np.abs(dt)) for dt in dthetas],
-        marker=11, color='tab:blue',
-        label=r'$\Delta \theta$ max')
-ax.plot(step_sizes, [np.median(np.abs(dt)) for dt in dphis],
-        marker='o',
-        label=r'$\Delta \phi$ median')
-ax.plot(step_sizes, [np.max(np.abs(dt)) for dt in dphis],
-        marker=11, color='tab:orange',
-        label=r'$\Delta \phi$ max')
-
-ax.set_xscale('log')
-ax.set_yscale('log')
-ax.set_xlabel('Step size')
-ax.set_ylabel('deg')
-ax.legend()
-
-plt.show()
+dthetas = pd.DataFrame(data=np.array(dthetas), index=step_sizes)
+dthetas.to_csv(f'results/dthetas_{l}{m}.csv')
+dphis = pd.DataFrame(data=np.array(dphis), index=step_sizes)
+dphis.to_csv(f'results/dphis_{l}{m}.csv')

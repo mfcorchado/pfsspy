@@ -48,7 +48,7 @@ def _cot(theta):
     return 1 / np.tan(theta)
 
 
-_extras = {'Ynm': _Ynm, 'cot': _cot}
+_extras = {'Ynm': _Ynm, 'cot': _cot, 'exp': np.exp}
 
 
 def _spherical_harmonic_sympy(l, m):

@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sunpy.map
 from matplotlib.gridspec import GridSpec
+import matplotlib.ticker as mticker
 
 import pfsspy
 from pfsspy import analytic
@@ -53,7 +54,7 @@ def brss_analytic(nphi, ns, rss, l, m):
 # on the source surface at a constant phi value to do a 1D comparison.
 ls = [1, 2, 3]
 fig = plt.figure(tight_layout=True)
-gs = GridSpec(len(ls), len(ls) + 1)
+gs = GridSpec(len(ls), len(ls) + 1, wspace=0, hspace=0)
 
 
 for i, l in enumerate(ls):
@@ -62,8 +63,8 @@ for i, l in enumerate(ls):
     axs = [ax0] + axs
     for j, m in enumerate(list(range(l + 1))):
         ax = axs[j]
-        nphi = 359
-        ns = 179
+        nphi = 360
+        ns = 180
         rss = 2.5
         nrho = 20
 
@@ -72,8 +73,20 @@ for i, l in enumerate(ls):
 
         ax.plot(br_pfsspy[:, 180], label='pfsspy')
         ax.plot(br_actual[:, 180], label='analytic')
-        ax.set_title(f'l={l}, m={m}')
         if i == 0 and j == 0:
             ax.legend()
+        if l != ls[-1]:
+            ax.xaxis.set_major_formatter(mticker.NullFormatter())
+        else:
+            ax.xaxis.set_major_locator(mticker.FixedLocator(
+                [0, 45, 90, 135]))
+        if l == ls[-1]:
+            ax.set_xlabel(f'm={m}', size=14)
+        if m == 0:
+            ax.set_ylabel(f'l={l}', rotation=0, size=14, labelpad=14)
+        ax.yaxis.set_major_locator(mticker.NullLocator())
+        ax.set_xlim(0, 180)
+        ax.axhline(0, linestyle='--', linewidth=0.5, color='black')
+
 
 plt.show()

@@ -73,8 +73,8 @@ def theta_fline_coords(r: u.m, rss: u.m, l, m, theta: u.rad):
     theta :
         Source surface latitude.
     """
-    flm = lambdify(x, flm_dict[(l, m)][0], "numpy")
-    flm_inv = lambdify(x, flm_dict[(l, m)][1], "numpy")
+    flm = lambdify(x, flm_dict[(l, abs(m))][0], "numpy")
+    flm_inv = lambdify(x, flm_dict[(l, abs(m))][1], "numpy")
     theta_out = flm_inv(flm(theta) * fr(r, rss, l))
     theta_out *= np.sign(theta_out) * np.sign(theta)
     return theta_out
@@ -93,10 +93,14 @@ def phi_fline_coords(r: u.m, rss: u.m, l, m, theta: u.rad, phi: u.rad):
         Source surface latitude and longitude.
     """
     theta_fline = theta_fline_coords(r, rss, l, m, theta)
-    glm = lambdify(x, glm_dict[(l, m)], "numpy")
-    phi_out = np.arcsin(glm(theta_fline) *
-                        np.sin(phi) /
-                        glm(theta))
+    glm = lambdify(x, glm_dict[(l, abs(m))], "numpy")
+    if m < 0:
+        f = np.cos
+        finv = np.arccos
+    elif m > 0:
+        f = np.sin
+        finv = np.arcsin
+    phi_out = finv(glm(theta_fline) * f(phi) / glm(theta))
     pi12 = np.pi / 2 * u.rad
     pi32 = 3 * np.pi / 2 * u.rad
     to_wrap = (pi12 < phi) & (phi < pi32)

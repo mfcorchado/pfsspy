@@ -83,6 +83,8 @@ def theta_fline_coords(r: u.m, rss: u.m, l, m, theta: u.rad):
 @u.quantity_input
 def phi_fline_coords(r: u.m, rss: u.m, l, m, theta: u.rad, phi: u.rad):
     """
+    Parameters
+    ----------
     r :
         Radial point.
     rss :
@@ -91,19 +93,25 @@ def phi_fline_coords(r: u.m, rss: u.m, l, m, theta: u.rad, phi: u.rad):
         Spherical harmonic numbers.
     theta, phi :
         Source surface latitude and longitude.
+
+    Returns
+    -------
+    phi :
+        Phi coordinates of field line(s).
     """
     theta_fline = theta_fline_coords(r, rss, l, m, theta)
     glm = lambdify(x, glm_dict[(l, abs(m))], "numpy")
     if m < 0:
-        f = np.cos
-        finv = np.arccos
+        phi_out = np.arccos(glm(theta_fline) * np.cos(phi) / glm(theta))
     elif m > 0:
-        f = np.sin
-        finv = np.arcsin
-    phi_out = finv(glm(theta_fline) * f(phi) / glm(theta))
+        phi_out = np.arcsin(glm(theta_fline) * np.sin(phi) / glm(theta))
     pi12 = np.pi / 2 * u.rad
     pi32 = 3 * np.pi / 2 * u.rad
-    to_wrap = (pi12 < phi) & (phi < pi32)
-    phi_out[to_wrap] = -phi_out[to_wrap] + np.pi * u.rad
-    phi_out[pi32 < phi] += 2 * np.pi * u.rad
+    if m > 0:
+        to_wrap = (pi12 < phi) & (phi < pi32)
+        phi_out[to_wrap] = -phi_out[to_wrap] + np.pi * u.rad
+        phi_out[pi32 < phi] += 2 * np.pi * u.rad
+    elif m < 0:
+        to_wrap = phi > np.pi * u.rad
+        phi_out[to_wrap] = -phi_out[to_wrap] + 2 * np.pi * u.rad
     return phi_out

@@ -22,7 +22,7 @@ quantity_support()
 # Compare the the pfsspy solution to the analytic solutions. Cuts are taken
 # on the source surface at a constant phi value to do a 1D comparison.
 l = 1
-m = 1
+m = 0
 nphi = 360
 ns = 180
 nr = 40
@@ -56,21 +56,26 @@ flines = tracer.trace(seeds, pfsspy_out)
 # Set a mask of open field lines
 mask = flines.connectivities.astype(bool).reshape(theta.shape)
 
-# Get solar surface latitude
-phi_solar = np.ones_like(phi) * np.nan
-phi_solar[mask] = flines.open_field_lines.solar_feet.lon
-theta_solar = np.ones_like(theta) * np.nan
-theta_solar[mask] = flines.open_field_lines.solar_feet.lat
 r_out = np.ones_like(theta.value) * const.R_sun * np.nan
 r_out[mask] = flines.open_field_lines.solar_feet.radius
+# longitude
+phi_solar = np.ones_like(phi) * np.nan
+phi_analytic = np.ones_like(phi) * np.nan
+phi_solar[mask] = flines.open_field_lines.solar_feet.lon
+try:
+    phi_analytic = phi_fline_coords(r_out, rss, l, m, theta, phi)
+except KeyError:
+    # If there's no g_lm entry
+    pass
+dphi = phi_solar - phi_analytic
+
+theta_solar = np.ones_like(theta) * np.nan
+theta_solar[mask] = flines.open_field_lines.solar_feet.lat
+theta_analytic = theta_fline_coords(r_out, rss, l, m, theta)
+dtheta = theta_solar - theta_analytic
 
 ###########################################################################
 # Calculate analytical solution
-theta_analytic = theta_fline_coords(r_out, rss, l, m, theta)
-dtheta = theta_solar - theta_analytic
-phi_analytic = phi_fline_coords(r_out, rss, l, m, theta, phi)
-dphi = phi_solar - phi_analytic
-
 fig, axs = plt.subplots(nrows=2, sharex=True, sharey=True)
 
 
@@ -103,6 +108,6 @@ ax.set_ylabel('sin(Latitude)')
 
 fig.suptitle(f'l={l}, m={m}')
 fig.tight_layout()
-fig.savefig('error_map.pdf', bbox_inches='tight')
+fig.savefig(f'figs/error_map_{l}{m}.pdf', bbox_inches='tight')
 
 plt.show()

@@ -47,7 +47,7 @@ results = {}
 
 for l in range(1, 6):
     results[l] = {}
-    for m in range(0, l + 1):
+    for m in range(-l, l + 1):
         print(f"l={l}, m={m}")
         flux_analytic = open_flux_analytic(l, m, zss)
         flux_numeric = open_flux_numeric(l, m, zss, nrho)
@@ -57,35 +57,3 @@ for l in range(1, 6):
 with open("open_flux_harmonics.json", "w") as f:
     # write json object to file
     f.write(json.dumps(results))
-
-
-with open("open_flux_harmonics.json", "r") as f:
-    results = json.load(f, parse_int=int)
-print(results)
-###############################################################################
-# Plot results
-fig, ax = plt.subplots()
-norm = mcolor.Normalize(vmin=1, vmax=1.06)
-for lstr in results:
-    l = int(lstr)
-    data = np.atleast_2d(list(results[lstr].values())).T
-    im = ax.imshow(data, extent=[l-0.5, l+0.5, -0.5, l+0.5],
-                   norm=norm)
-
-fig.colorbar(im, label=r'$\Phi_{pfsspy} / \Phi_{analytic}$')
-ax.set_xlim(0.5, l+0.5)
-ax.set_ylim(-0.5, l+0.5)
-ax.xaxis.set_major_locator(mticker.MultipleLocator(1))
-ax.yaxis.set_major_locator(mticker.MultipleLocator(1))
-
-
-def fmt(x, pos):
-    return str(int(x))
-
-
-ax.xaxis.set_major_formatter(fmt)
-ax.yaxis.set_major_formatter(fmt)
-ax.set_xlabel('l')
-ax.set_ylabel('m')
-fig.savefig('flux_harmonics.pdf', bbox_inches='tight')
-plt.show()

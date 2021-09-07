@@ -12,11 +12,33 @@ from matplotlib.gridspec import GridSpec
 import pandas as pd
 import numpy as np
 
-dthetas = pd.read_csv('results/dthetas_1-1.csv', index_col=0)
-dphis = pd.read_csv('results/dphis_1-1.csv', index_col=0)
+
+def plot_distributions(axs, l, m):
+    dphis = pd.read_csv(f'results/dphis_{l}{m}.csv', index_col=0)
+    dthetas = pd.read_csv(f'results/dthetas_{l}{m}.csv', index_col=0)
+    plot_single_distribution(dphis, axs[1], 'tab:orange')
+    plot_single_distribution(dthetas, axs[0], 'tab:blue')
+
+    for ax in axs:
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xlim(np.min(dphis.index), np.max(dphis.index))
+        ax.set_ylim(1e-3, 5e1)
+
+        def formatter(x, pos):
+            return str(int(x))
+
+        ax.xaxis.set_minor_formatter(mticker.FuncFormatter(formatter))
+        ax.xaxis.set_major_formatter(mticker.FuncFormatter(formatter))
+        ax.xaxis.set_major_locator(mticker.FixedLocator(
+            [2, 4, 6, 8, 10, 20, 40]))
+        ax.xaxis.set_minor_locator(mticker.FixedLocator([]))
+    axs[0].set_title(f'l={l}, m={m}')
+    axs[1].set_xlabel('Step size')
+    axs[1].set_ylabel('deg')
 
 
-def plot_distributions(df, ax, color):
+def plot_single_distribution(df, ax, color):
     for pc in ([0, 100], [1, 99], [10, 90]):
         pctiles = np.nanpercentile(np.abs(df), pc, axis=1)
         ax.fill_between(df.index, pctiles[0], pctiles[1],
@@ -25,29 +47,18 @@ def plot_distributions(df, ax, color):
         ax.scatter(df.index, pctiles[1], s=1, marker='.', color='black', alpha=0.5)
 
 
-fig, axs = plt.subplots(nrows=2, sharex=True, sharey=True,
-                        gridspec_kw={'hspace': 0, 'wspace': 0},
-                        figsize=(4, 3))
-plot_distributions(dthetas, axs[0], 'tab:blue')
-plot_distributions(dphis, axs[1], 'tab:orange')
+ls = [1]
+max_m = 2 * max(ls) + 1
+fig = plt.figure()
+outer_grid = fig.add_gridspec(len(ls), max_m, wspace=0, hspace=0)
+for li, l in enumerate(ls):
+    for mi, m in enumerate(range(-l, l+1)):
+        print(l, m)
+        inner_grid = outer_grid[li, mi].subgridspec(2, 1, wspace=0, hspace=0)
+        axs = inner_grid.subplots()
+        plot_distributions(axs, l, m)
 
-ax = axs[1]
-ax.set_xscale('log')
-ax.set_yscale('log')
-ax.set_xlabel('Step size')
-ax.set_ylabel('deg')
-ax.set_xlim(np.min(dphis.index), np.max(dphis.index))
-ax.set_ylim(1e-3, 5e1)
-
-
-def formatter(x, pos):
-    return str(int(x))
-
-
-ax.xaxis.set_minor_formatter(mticker.FuncFormatter(formatter))
-ax.xaxis.set_major_formatter(mticker.FuncFormatter(formatter))
-ax.xaxis.set_major_locator(mticker.FixedLocator([2, 4, 6, 8, 10, 20, 40]))
-ax.xaxis.set_minor_locator(mticker.FixedLocator([]))
-fig.tight_layout()
+# fig.tight_layout()
+# fig.savefig(f'figs/step_size_{l}{m}.pdf', bbox_inches='tight')
 
 plt.show()

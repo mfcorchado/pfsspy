@@ -7,6 +7,7 @@ number of radial grid points, and plotted as a function of spherical harmonic.
 
 ###############################################################################
 # First, import required modules
+from collections import defaultdict
 import functools
 import json
 
@@ -43,15 +44,21 @@ def open_flux_numeric(l, m, zss, nrho):
 zss = 2
 nrho = 40
 
-results = {}
+results = {'numeric': defaultdict(dict),
+           'analytic': defaultdict(dict)}
 
 for l in range(1, 6):
-    results[l] = {}
     for m in range(-l, l + 1):
         print(f"l={l}, m={m}")
-        flux_analytic = open_flux_analytic(l, m, zss)
+        if -m in results['analytic'][l]:
+            # Analytic flux for m = -m is the same
+            flux_analytic = results['analytic'][l][-m]
+        else:
+            flux_analytic = open_flux_analytic(l, m, zss)
+
+        results['analytic'][l][m] = flux_analytic
         flux_numeric = open_flux_numeric(l, m, zss, nrho)
-        results[l][m] = flux_numeric / flux_analytic
+        results['numeric'][l][m] = flux_numeric
 
 # open file for writing, "w"
 with open("open_flux_harmonics.json", "w") as f:

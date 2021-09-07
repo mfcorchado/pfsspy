@@ -100,11 +100,15 @@ def phi_fline_coords(r: u.m, rss: u.m, l, m, theta: u.rad, phi: u.rad):
         Phi coordinates of field line(s).
     """
     theta_fline = theta_fline_coords(r, rss, l, m, theta)
-    glm = lambdify(x, glm_dict[(l, abs(m))], "numpy")
-    if m < 0:
-        phi_out = np.arccos(glm(theta_fline) * np.cos(phi) / glm(theta))
-    elif m > 0:
-        phi_out = np.arcsin(glm(theta_fline) * np.sin(phi) / glm(theta))
+    if m == 0:
+        phi_out = phi
+    else:
+        glm = lambdify(x, glm_dict[(l, abs(m))], "numpy")
+        if m < 0:
+            phi_out = np.arccos(glm(theta_fline) * np.cos(phi) / glm(theta))
+        elif m > 0:
+            phi_out = np.arcsin(glm(theta_fline) * np.sin(phi) / glm(theta))
+
     pi12 = np.pi / 2 * u.rad
     pi32 = 3 * np.pi / 2 * u.rad
     if m > 0:

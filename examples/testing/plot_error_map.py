@@ -22,7 +22,7 @@ quantity_support()
 # Compare the the pfsspy solution to the analytic solutions. Cuts are taken
 # on the source surface at a constant phi value to do a 1D comparison.
 l = 1
-m = 0
+m = 1
 nphi = 360
 ns = 180
 nr = 40
@@ -66,6 +66,7 @@ try:
     phi_analytic = phi_fline_coords(r_out, rss, l, m, theta, phi)
 except KeyError:
     # If there's no g_lm entry
+    print(f'No g_lm entry for l={l}, m={m}')
     pass
 dphi = phi_solar - phi_analytic
 
@@ -73,6 +74,11 @@ theta_solar = np.ones_like(theta) * np.nan
 theta_solar[mask] = flines.open_field_lines.solar_feet.lat
 theta_analytic = theta_fline_coords(r_out, rss, l, m, theta)
 dtheta = theta_solar - theta_analytic
+
+fig, ax = plt.subplots()
+ax.scatter(phi_solar, phi_analytic, label='phi')
+ax.scatter(theta_solar, theta_analytic, label='theta')
+ax.legend()
 
 ###########################################################################
 # Calculate analytical solution

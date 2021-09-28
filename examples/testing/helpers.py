@@ -8,6 +8,9 @@ import pfsspy.utils
 from pfsspy import analytic
 
 
+pi = np.pi * u.rad
+
+
 def theta_phi_grid(nphi, ns):
     # Return a theta, phi grid with a given numer of points
     phi = np.linspace(0, 2 * np.pi, nphi)
@@ -18,6 +21,7 @@ def theta_phi_grid(nphi, ns):
 
 
 def pffspy_output(nphi, ns, nrho, rss, l, m):
+    assert l >= 1, 'l must be >= 1'
     # Return the pfsspy solution for given input parameters
     theta, phi = theta_phi_grid(nphi, ns)
 
@@ -52,13 +56,14 @@ def fr(r: u.m, rss: u.m, l):
             ((l * rho**(2*l+1)) + l+1))**(1 / (l+1))
 
 
-flm_dict = {(1, 0): [cos(x), acos(x)],
-            (1, 1): [sin(x), asin(x)],
+flm_dict = {(1, 0): [sin(x), asin(x)],
+            (1, 1): [cos(x), acos(x)],
             (2, 1): [cos(2*x)**(1/2), acos(x**2) / 2],
-            (2, 2): [sin(x), asin(x)]}
+            (2, 2): [cos(x), acos(x)]}
 
 glm_dict = {(1, 1): sin(x) / cos(x),
-            (2, 1): (sin(x)**2 / cos(2*x))**1/2}
+            (2, 1): (sin(x)**2 / cos(2*x))**(1/2),
+            (2, 2): (cos(x) / sin(x))**(1/4),}
 
 
 @u.quantity_input
@@ -71,17 +76,23 @@ def theta_fline_coords(r: u.m, rss: u.m, l, m, theta: u.rad):
     l, m : int
         Spherical harmonic numbers.
     theta :
-        Source surface latitude.
+        Source surface latitude, in range [-pi/2, pi/2]
+
+    Returns
+    -------
+    theta_fline :
+        Theta field line coordinates, in range [-pi/2, pi/2]
     """
+    theta = pi / 2 - theta
     flm = lambdify(x, flm_dict[(l, abs(m))][0], "numpy")
     flm_inv = lambdify(x, flm_dict[(l, abs(m))][1], "numpy")
     theta_out = flm_inv(flm(theta) * fr(r, rss, l))
-    theta_out *= np.sign(theta_out) * np.sign(theta)
+    theta_out = pi / 2 - theta_out
     return theta_out
 
 
 @u.quantity_input
-def phi_fline_coords(r: u.m, rss: u.m, l, m, theta: u.rad, phi: u.rad):
+def phi_fline_coords(r: u.m, rss: u.m, l, m, theta_ss: u.rad, phi: u.rad):
     """
     Parameters
     ----------
@@ -91,31 +102,33 @@ def phi_fline_coords(r: u.m, rss: u.m, l, m, theta: u.rad, phi: u.rad):
         Source surface radius.
     l, m : int
         Spherical harmonic numbers.
-    theta, phi :
-        Source surface latitude and longitude.
+    theta_ss, phi :
+        Source surface latitude (in range [-pi/2, pi/2]) and longitude.
 
     Returns
     -------
     phi :
         Phi coordinates of field line(s).
     """
-    theta_fline = theta_fline_coords(r, rss, l, m, theta)
+    theta_fline = theta_fline_coords(r, rss, l, m, theta_ss)
+    theta_fline = pi / 2 - theta_fline
+    theta_ss = pi / 2 - theta_ss
     if m == 0:
         phi_out = phi
     else:
         glm = lambdify(x, glm_dict[(l, abs(m))], "numpy")
-        if m < 0:
-            phi_out = np.arccos(glm(theta_fline) * np.cos(phi) / glm(theta))
-        elif m > 0:
-            phi_out = np.arcsin(glm(theta_fline) * np.sin(phi) / glm(theta))
-
-    pi12 = np.pi / 2 * u.rad
-    pi32 = 3 * np.pi / 2 * u.rad
-    if m > 0:
-        to_wrap = (pi12 < phi) & (phi < pi32)
-        phi_out[to_wrap] = -phi_out[to_wrap] + np.pi * u.rad
-        phi_out[pi32 < phi] += 2 * np.pi * u.rad
-    elif m < 0:
-        to_wrap = phi > np.pi * u.rad
-        phi_out[to_wrap] = -phi_out[to_wrap] + 2 * np.pi * u.rad
+        pi12 = pi / 2
+        pi22 = pi
+        pi32 = 3 * pi / 2
+        if m > 0:
+            # arcsin gives values in range [-pi/2, pi/2]
+            phi_out = np.arcsin(glm(theta_ss) / glm(theta_fline) * np.sin(m * phi)) / m
+            to_wrap = (pi12 < phi) & (phi < pi32)
+            phi_out[to_wrap] = -phi_out[to_wrap] + pi
+            phi_out[pi32 < phi] += 2 * pi
+        elif m < 0:
+            # arccos gives values in range [0, pi]
+            phi_out = np.arccos(glm(theta_ss) / glm(theta_fline) * np.cos(m * phi)) / m
+            '''to_wrap = phi > pi22
+            phi_out[to_wrap] = -phi_out[to_wrap] + 2 * pi'''
     return phi_out

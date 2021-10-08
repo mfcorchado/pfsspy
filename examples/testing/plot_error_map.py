@@ -21,8 +21,8 @@ quantity_support()
 ###############################################################################
 # Compare the the pfsspy solution to the analytic solutions. Cuts are taken
 # on the source surface at a constant phi value to do a 1D comparison.
-l = 1
-m = 1
+l = 2
+m = -2
 nphi = 360
 ns = 180
 nr = 40
@@ -75,10 +75,10 @@ theta_solar[mask] = flines.open_field_lines.solar_feet.lat
 theta_analytic = theta_fline_coords(r_out, rss, l, m, theta)
 dtheta = theta_solar - theta_analytic
 
-fig, ax = plt.subplots()
-ax.scatter(phi_solar, phi_analytic, label='phi')
-ax.scatter(theta_solar, theta_analytic, label='theta')
-ax.legend()
+fig, axs = plt.subplots(nrows=2, sharex=True)
+axs[0].scatter(phi_solar, phi_analytic, label='phi')
+axs[1].scatter(theta_solar, theta_analytic, label='theta')
+[ax.legend() for ax in axs]
 
 ###########################################################################
 # Calculate analytical solution

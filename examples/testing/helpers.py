@@ -53,17 +53,19 @@ def brss_analytic(nphi, ns, rss, l, m):
 def fr(r: u.m, rss: u.m, l):
     rho = r / rss
     return ((rho**l * (2*l+1)) /
-            ((l * rho**(2*l+1)) + l+1))**(1 / (l+1))
+            ((l * rho**(2*l+1)) + l+1))**(l / (l+1))
 
 
 flm_dict = {(1, 0): [sin(x), asin(x)],
             (1, 1): [cos(x), acos(x)],
-            (2, 1): [cos(2*x)**(1/2), acos(x**2) / 2],
-            (2, 2): [cos(x), acos(x)]}
+            (2, 1): [cos(2*x), acos(x) / 2],
+            (2, 2): [cos(x)**2, acos(abs(x)**(1/2))],
+            (3, 3): [cos(x)**3, acos(abs(x)**(1/3))]}
 
 glm_dict = {(1, 1): sin(x) / cos(x),
-            (2, 1): (sin(x)**2 / cos(2*x))**(1/2),
-            (2, 2): (cos(x) / sin(x))**(1/4),}
+            (2, 1): (sin(x)**2 / cos(2*x))**2,
+            (2, 2): (sin(x) / cos(x))**(2),
+            (3, 3): (sin(x) / cos(x))**(3),}
 
 
 @u.quantity_input
@@ -88,6 +90,7 @@ def theta_fline_coords(r: u.m, rss: u.m, l, m, theta: u.rad):
     flm_inv = lambdify(x, flm_dict[(l, abs(m))][1], "numpy")
     theta_out = flm_inv(flm(theta) * fr(r, rss, l))
     theta_out = pi / 2 - theta_out
+    theta_out *= np.sign(theta_out) * np.sign(pi / 2 - theta)
     return theta_out
 
 
@@ -123,12 +126,35 @@ def phi_fline_coords(r: u.m, rss: u.m, l, m, theta_ss: u.rad, phi: u.rad):
         if m > 0:
             # arcsin gives values in range [-pi/2, pi/2]
             phi_out = np.arcsin(glm(theta_ss) / glm(theta_fline) * np.sin(m * phi)) / m
-            to_wrap = (pi12 < phi) & (phi < pi32)
-            phi_out[to_wrap] = -phi_out[to_wrap] + pi
-            phi_out[pi32 < phi] += 2 * pi
+            phi_out = unwrap_sin(phi, phi_out, m)
         elif m < 0:
             # arccos gives values in range [0, pi]
             phi_out = np.arccos(glm(theta_ss) / glm(theta_fline) * np.cos(m * phi)) / m
-            '''to_wrap = phi > pi22
-            phi_out[to_wrap] = -phi_out[to_wrap] + 2 * pi'''
+            phi_out = unwrap_cos(phi, phi_out, m)
+    return phi_out
+
+
+def unwrap_sin(phi_in, phi_out, m):
+    phi_0 = pi / (2 * m)
+    for n in range(m * 2 + 1):
+        lower_lim = -phi_0 + n * pi / m
+        upper_lim = phi_0 + n * pi / m
+        mask = (phi_in > lower_lim) & (phi_in < upper_lim)
+        if n % 2 == 1:
+            phi_out[mask] *= -1
+        phi_out[mask] += n * pi / m
+
+    return phi_out
+
+
+def unwrap_cos(phi_in, phi_out, m):
+    m = abs(m)
+    for n in range(m * 2):
+        lower_lim = n * pi / m
+        upper_lim = (n + 1) * pi / m
+        mask = (phi_in > lower_lim) & (phi_in < upper_lim)
+        if n % 2 == 0:
+            phi_out[mask] *= -1
+        phi_out[mask] += 2 * n * pi / m
+
     return phi_out

@@ -25,8 +25,8 @@ from helpers import pffspy_output, fr, theta_fline_coords, phi_fline_coords
 ###############################################################################
 # Compare the the pfsspy solution to the analytic solutions. Cuts are taken
 # on the source surface at a constant phi value to do a 1D comparison.
-l = 2
-m = 1
+l = 3
+m = 2
 nphi = 360
 ns = 180
 nr = 40
@@ -51,7 +51,7 @@ theta, phi = theta * u.rad, phi * u.deg
 seeds = SkyCoord(radius=rss, lat=theta.ravel(), lon=phi.ravel(),
                  frame=pfsspy_out.coordinate_frame)
 
-step_sizes = [40, 30, 20, 15, 12, 10, 5, 2]
+step_sizes = [20, 15, 12, 10, 5, 2, 1, 0.5]
 dthetas = []
 dphis = []
 for step_size in step_sizes:
@@ -84,6 +84,6 @@ for step_size in step_sizes:
     dphis.append(dphi.ravel())
 
 dthetas = pd.DataFrame(data=np.array(dthetas), index=step_sizes)
-dthetas.to_csv(f'results/dthetas_{l}{m}.csv')
+dthetas.to_hdf(f'results/dthetas_{l}{m}.hdf', 'table', mode='w')
 dphis = pd.DataFrame(data=np.array(dphis), index=step_sizes)
-dphis.to_csv(f'results/dphis_{l}{m}.csv')
+dphis.to_hdf(f'results/dphis_{l}{m}.hdf', 'table', mode='w')

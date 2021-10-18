@@ -53,18 +53,20 @@ def brss_analytic(nphi, ns, rss, l, m):
 def fr(r: u.m, rss: u.m, l):
     rho = r / rss
     return ((rho**l * (2*l+1)) /
-            ((l * rho**(2*l+1)) + l+1))**(l / (l+1))
+            ((l * rho**(2*l+1)) + l+1))**(2 / (l+1))
 
 
-flm_dict = {(1, 0): [sin(x), asin(x)],
-            (1, 1): [cos(x), acos(x)],
+flm_dict = {(1, 0): [sin(x)**2, asin(x**(1/2))],
+            (1, 1): [cos(x)**2, acos(x**(1/2))],
             (2, 1): [cos(2*x), acos(x) / 2],
             (2, 2): [cos(x)**2, acos(abs(x)**(1/2))],
-            (3, 3): [cos(x)**3, acos(abs(x)**(1/3))]}
+            (3, 2): [3 * cos(2*x) + 1, acos((x - 1) / 3) / 2],
+            (3, 3): [cos(x)**2, acos(abs(x)**(1/2))]}
 
 glm_dict = {(1, 1): sin(x) / cos(x),
             (2, 1): (sin(x)**2 / cos(2*x))**2,
             (2, 2): (sin(x) / cos(x))**(2),
+            (3, 2): sin(x)**2 / (3 - 2 * sin(x)**2),
             (3, 3): (sin(x) / cos(x))**(3),}
 
 
@@ -120,16 +122,14 @@ def phi_fline_coords(r: u.m, rss: u.m, l, m, theta_ss: u.rad, phi: u.rad):
         phi_out = phi
     else:
         glm = lambdify(x, glm_dict[(l, abs(m))], "numpy")
-        pi12 = pi / 2
-        pi22 = pi
-        pi32 = 3 * pi / 2
+        glm_ratio = glm(theta_ss) / glm(theta_fline)
         if m > 0:
             # arcsin gives values in range [-pi/2, pi/2]
-            phi_out = np.arcsin(glm(theta_ss) / glm(theta_fline) * np.sin(m * phi)) / m
+            phi_out = np.arcsin(glm_ratio * np.sin(m * phi)) / m
             phi_out = unwrap_sin(phi, phi_out, m)
         elif m < 0:
             # arccos gives values in range [0, pi]
-            phi_out = np.arccos(glm(theta_ss) / glm(theta_fline) * np.cos(m * phi)) / m
+            phi_out = np.arccos(glm_ratio * np.cos(m * phi)) / m
             phi_out = unwrap_cos(phi, phi_out, m)
     return phi_out
 
@@ -155,6 +155,8 @@ def unwrap_cos(phi_in, phi_out, m):
         mask = (phi_in > lower_lim) & (phi_in < upper_lim)
         if n % 2 == 0:
             phi_out[mask] *= -1
-        phi_out[mask] += 2 * n * pi / m
+        else:
+            phi_out[mask] += pi / m
+        phi_out[mask] += n * pi / m
 
     return phi_out

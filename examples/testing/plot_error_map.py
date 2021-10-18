@@ -76,8 +76,8 @@ theta_analytic = theta_fline_coords(r_out, rss, l, m, theta)
 dtheta = theta_solar - theta_analytic
 
 fig, axs = plt.subplots(nrows=2, sharex=True)
-axs[0].scatter(phi_solar, phi_analytic, label='phi')
-axs[1].scatter(theta_solar, theta_analytic, label='theta')
+axs[0].scatter(phi_solar.to(u.deg), phi_analytic.to(u.deg), label='phi')
+axs[1].scatter(theta_solar.to(u.deg), theta_analytic.to(u.deg), label='theta')
 [ax.legend() for ax in axs]
 
 ###########################################################################

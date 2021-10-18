@@ -14,8 +14,12 @@ import numpy as np
 
 
 def plot_distributions(axs, l, m):
-    dphis = pd.read_csv(f'results/dphis_{l}{m}.csv', index_col=0)
-    dthetas = pd.read_csv(f'results/dthetas_{l}{m}.csv', index_col=0)
+    try:
+        dphis = pd.read_hdf(f'results/dphis_{l}{m}.hdf', 'table')
+        dthetas = pd.read_hdf(f'results/dthetas_{l}{m}.hdf', 'table')
+    except FileNotFoundError:
+        print(f'❌ Files not found for l={l}, m={m}')
+        return
     plot_single_distribution(dphis, axs[1], 'tab:orange')
     plot_single_distribution(dthetas, axs[0], 'tab:blue')
 
@@ -23,7 +27,7 @@ def plot_distributions(axs, l, m):
         ax.set_xscale('log')
         ax.set_yscale('log')
         ax.set_xlim(np.min(dphis.index), np.max(dphis.index))
-        ax.set_ylim(1e-3, 5e1)
+        ax.set_ylim(1e-2, 5e1)
 
         def formatter(x, pos):
             return str(int(x))
@@ -47,16 +51,23 @@ def plot_single_distribution(df, ax, color):
         ax.scatter(df.index, pctiles[1], s=1, marker='.', color='black', alpha=0.5)
 
 
-ls = [1]
-max_m = 2 * max(ls) + 1
+ls = [1, 2, 3]
+max_m = max(ls)
 fig = plt.figure()
-outer_grid = fig.add_gridspec(len(ls), max_m, wspace=0, hspace=0)
+outer_grid = fig.add_gridspec(len(ls), 2 * max(ls) + 1, wspace=0, hspace=0)
 for li, l in enumerate(ls):
     for mi, m in enumerate(range(-l, l+1)):
         print(l, m)
-        inner_grid = outer_grid[li, mi].subgridspec(2, 1, wspace=0, hspace=0)
+        inner_grid = outer_grid[li, m+max_m].subgridspec(2, 1, wspace=0, hspace=0)
         axs = inner_grid.subplots()
+
         plot_distributions(axs, l, m)
+
+        # Axis formatting
+        if l != max(ls) or m != -max(ls):
+            [ax.xaxis.set_major_formatter(mticker.NullFormatter()) for ax in axs]
+            [ax.yaxis.set_major_formatter(mticker.NullFormatter()) for ax in axs]
+            [ax.yaxis.set_label_text('') for ax in axs]
 
 # fig.tight_layout()
 # fig.savefig(f'figs/step_size_{l}{m}.pdf', bbox_inches='tight')

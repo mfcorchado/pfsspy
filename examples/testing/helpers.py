@@ -1,11 +1,12 @@
 import astropy.units as u
+import matplotlib.pyplot as plt
 import numpy as np
 import sunpy.map
 from sympy import acos, asin, cos, lambdify, sin
 from sympy.abc import x
 
 import pfsspy.utils
-from pfsspy import analytic
+import pfsspy.analytic as analytic
 
 
 pi = np.pi * u.rad
@@ -64,9 +65,9 @@ flm_dict = {(1, 0): [sin(x)**2, asin(x**(1/2))],
             (3, 3): [cos(x)**2, acos(abs(x)**(1/2))]}
 
 glm_dict = {(1, 1): sin(x) / cos(x),
-            (2, 1): (sin(x)**2 / cos(2*x))**2,
+            (2, 1): sin(x) / abs(cos(2*x))**(1/2),
             (2, 2): (sin(x) / cos(x))**(2),
-            (3, 2): sin(x)**2 / (3 - 2 * sin(x)**2),
+            (3, 2): sin(x)**2 / (2 - 3 * sin(x)**2),
             (3, 3): (sin(x) / cos(x))**(3),}
 
 
@@ -160,3 +161,34 @@ def unwrap_cos(phi_in, phi_out, m):
         phi_out[mask] += n * pi / m
 
     return phi_out
+
+
+class LMAxes:
+    """
+    Wrapper for a set of subplots spanning spherical harmonic numbers.
+    """
+    def __init__(self, nl):
+        self.nl = nl
+
+        self.fig = plt.figure()
+        self.grid = self.fig.add_gridspec(ncols=2 * nl + 1, nrows=nl,
+                                          wspace=0, hspace=0)
+        self.axs = np.empty((nl, 2 * nl + 1), dtype=object)
+        for l in range(1, nl+1):
+            for m in range(-l, l+1):
+                idx = self.grid_idx(l, m)
+                subplot_spec = self.grid[idx]
+                if m > -l:
+                    sharey = ax
+                else:
+                    sharey = None
+                ax = self.fig.add_subplot(self.grid[idx], sharey=sharey)
+                self.axs[idx] = ax
+
+    def grid_idx(self, l, m):
+        return l-1, m+self.nl
+
+    def __getitem__(self, item):
+        l, m = item
+        idx = self.grid_idx(l, m)
+        return self.axs[idx]

@@ -26,7 +26,7 @@ from helpers import pffspy_output, fr, theta_fline_coords, phi_fline_coords
 # Compare the the pfsspy solution to the analytic solutions. Cuts are taken
 # on the source surface at a constant phi value to do a 1D comparison.
 l = 3
-m = 2
+m = -2
 nphi = 360
 ns = 180
 nr = 40
@@ -44,7 +44,7 @@ n = 90
 # Create 1D theta, phi arrays
 phi = np.linspace(0, 360, n * 2)
 phi = phi[:-1] + np.diff(phi) / 2
-theta = np.arcsin(np.linspace(-1, 1, n, endpoint=False) + 1/n)
+theta = np.arcsin(np.linspace(-0.98, 0.98, n, endpoint=False) + 1/n)
 # Mesh into 2D arrays
 theta, phi = np.meshgrid(theta, phi, indexing='ij')
 theta, phi = theta * u.rad, phi * u.deg

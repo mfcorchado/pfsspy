@@ -35,7 +35,7 @@ def plot_distributions(axs, l, m):
         ax.xaxis.set_minor_formatter(mticker.FuncFormatter(formatter))
         ax.xaxis.set_major_formatter(mticker.FuncFormatter(formatter))
         ax.xaxis.set_major_locator(mticker.FixedLocator(
-            [2, 4, 6, 8, 10, 20, 40]))
+            [1, 2, 4, 8, 20]))
         ax.xaxis.set_minor_locator(mticker.FixedLocator([]))
     axs[0].set_title(f'l={l}, m={m}')
     axs[1].set_xlabel('Step size')
@@ -45,9 +45,9 @@ def plot_distributions(axs, l, m):
 def plot_single_distribution(df, ax, color):
     for pc in ([0, 100], [1, 99], [10, 90]):
         pctiles = np.nanpercentile(np.abs(df), pc, axis=1)
-        ax.fill_between(df.index, pctiles[0], pctiles[1],
+        ax.fill_between(df.index, 1e-3, pctiles[1],
                         alpha=0.4, color=color, edgecolor='face')
-        ax.scatter(df.index, pctiles[0], s=1, marker='.', color='black', alpha=0.5)
+        # ax.scatter(df.index, pctiles[0], s=1, marker='.', color='black', alpha=0.5)
         ax.scatter(df.index, pctiles[1], s=1, marker='.', color='black', alpha=0.5)
 
 

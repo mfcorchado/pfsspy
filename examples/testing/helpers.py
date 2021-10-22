@@ -180,18 +180,15 @@ class LMAxes:
             for m in range(-l, l+1):
                 idx = self.grid_idx(l, m)
                 subplot_spec = self.grid[idx]
-                if m > -l:
-                    sharey = ax
-                else:
-                    sharey = None
-                ax = self.fig.add_subplot(self.grid[idx], sharey=sharey)
+                ax = self.fig.add_subplot(self.grid[idx])
                 self.axs[idx] = ax
                 self.all_axs.append(ax)
 
                 ax.xaxis.set_major_formatter(mticker.NullFormatter())
                 ax.yaxis.set_major_formatter(mticker.NullFormatter())
-                ax.xaxis.set_ticks([])
-                ax.yaxis.set_ticks([])
+                for minor in [True, False]:
+                    ax.xaxis.set_ticks([], minor=minor)
+                    ax.yaxis.set_ticks([], minor=minor)
                 for spine in ax.spines:
                     ax.spines[spine].set_visible(False)
 

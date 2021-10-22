@@ -56,11 +56,11 @@ for l in range(1, 6):
         else:
             flux_analytic = open_flux_analytic(l, m, zss)
 
-        results['analytic'][l][m] = flux_analytic
+        results['analytic'][l][m] = float(flux_analytic)
         flux_numeric = open_flux_numeric(l, m, zss, nrho)
-        results['numeric'][l][m] = flux_numeric
+        results['numeric'][l][m] = float(flux_numeric)
 
 # open file for writing, "w"
-with open("open_flux_harmonics.json", "w") as f:
+with open("results/open_flux_harmonics.json", "w") as f:
     # write json object to file
     f.write(json.dumps(results))

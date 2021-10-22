@@ -1,4 +1,6 @@
 import astropy.units as u
+import matplotlib.colors as mcolor
+import matplotlib.ticker as mticker
 import matplotlib.pyplot as plt
 import numpy as np
 import sunpy.map
@@ -39,7 +41,7 @@ def brss_pfsspy(nphi, ns, nrho, rss, l, m):
     # Return the radial component of the source surface mangetic field
     # for given input parameters
     pfsspy_out = pffspy_output(nphi, ns, nrho, rss, l, m)
-    return pfsspy_out.bc[0][:, :, -1].T
+    return pfsspy_out.bc[0][:, :, -1].T.astype(float)
 
 
 def brss_analytic(nphi, ns, rss, l, m):
@@ -170,10 +172,10 @@ class LMAxes:
     def __init__(self, nl):
         self.nl = nl
 
-        self.fig = plt.figure()
-        self.grid = self.fig.add_gridspec(ncols=2 * nl + 1, nrows=nl,
-                                          wspace=0, hspace=0)
+        self.fig = plt.figure(figsize=(10, 4))
+        self.grid = self.fig.add_gridspec(ncols=2 * nl + 1, nrows=nl    )
         self.axs = np.empty((nl, 2 * nl + 1), dtype=object)
+        self.all_axs = []   # List of all axs
         for l in range(1, nl+1):
             for m in range(-l, l+1):
                 idx = self.grid_idx(l, m)
@@ -184,6 +186,19 @@ class LMAxes:
                     sharey = None
                 ax = self.fig.add_subplot(self.grid[idx], sharey=sharey)
                 self.axs[idx] = ax
+                self.all_axs.append(ax)
+
+                ax.xaxis.set_major_formatter(mticker.NullFormatter())
+                ax.yaxis.set_major_formatter(mticker.NullFormatter())
+                ax.xaxis.set_ticks([])
+                ax.yaxis.set_ticks([])
+                for spine in ax.spines:
+                    ax.spines[spine].set_visible(False)
+
+                if l == nl:
+                    ax.set_xlabel(str(m))
+                if m == -l:
+                    ax.set_ylabel(str(l), rotation=45)
 
     def grid_idx(self, l, m):
         return l-1, m+self.nl

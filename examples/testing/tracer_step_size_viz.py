@@ -30,13 +30,14 @@ for l in range(1, nl+1):
             continue
 
         for data in [dphis, dthetas]:
-            ax.plot(data.index, np.nanmax(data.values, axis=1),
-                    marker='.')
+            vals = np.ma.masked_array(data.values, np.abs(data.values) > 30)
+            ax.plot(data.index, np.nanmax(vals, axis=1), marker='.')
 
         ax.set_xscale('log')
         ax.set_yscale('log')
         ax.set_ylim(0.5e-1, 2e1)
-        ax.axvline(1, color='k', linewidth=1, linestyle='--', alpha=0.2)
+        for x in [1, 4, 16]:
+            ax.axvline(x, color='k', linewidth=1, linestyle='--', alpha=0.2)
         for y in [1e-1, 1, 1e1]:
             ax.axhline(y, color='k', linewidth=1, linestyle='--', alpha=0.2)
 
@@ -45,10 +46,13 @@ for l in range(1, nl+1):
             ax.yaxis.tick_right()
             ax.xaxis.set_ticks([1, 4, 16])
             ax.xaxis.set_major_formatter(mticker.ScalarFormatter())
+            ax.yaxis.set_major_formatter(mticker.StrMethodFormatter('{x}°'))
             ax.xaxis.set_ticks([], minor=True)
             ax.yaxis.set_ticks([], minor=True)
-            ax.set_xlabel('Tracer step size')
-            ax.set_ylabel('Maximum error (deg)')
+            ax.set_xlabel('Step size')
+            ax.set_ylabel('Max\nerror', rotation=0, labelpad=15, va='center')
+            ax.xaxis.set_label_position('top')
+            ax.yaxis.set_label_position('right')
         else:
             ax.yaxis.set_major_formatter(mticker.NullFormatter())
             for minor in [True, False]:
@@ -56,6 +60,5 @@ for l in range(1, nl+1):
                 ax.yaxis.set_ticks([], minor=minor)
 
 
-# fig.savefig(f'figs/tracer_step_size.pdf')
-
+axs.fig.savefig(f'figs/tracer_step_size.pdf', bbox_inches='tight')
 plt.show()

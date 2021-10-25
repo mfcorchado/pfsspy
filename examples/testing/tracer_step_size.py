@@ -51,7 +51,7 @@ theta, phi = theta * u.rad, phi * u.deg
 seeds = SkyCoord(radius=rss, lat=theta.ravel(), lon=phi.ravel(),
                  frame=pfsspy_out.coordinate_frame)
 
-step_sizes = [20, 15, 12, 10, 5, 2, 1, 0.5]
+step_sizes = [32, 16, 8, 4, 2, 1, 0.5]
 dthetas = []
 dphis = []
 for step_size in step_sizes:

@@ -17,7 +17,7 @@ import matplotlib.ticker as mticker
 import pfsspy
 from pfsspy import analytic
 
-from helpers import LMAxes
+from helpers import LMAxes, figdir
 
 ###############################################################################
 # Setup some useful functions for testing
@@ -58,7 +58,7 @@ ns = 180
 rss = 2
 nrho = 20
 
-nl = 2
+nl = 5
 axs = LMAxes(nl=nl)
 
 for l in range(1, nl+1):
@@ -71,10 +71,14 @@ for l in range(1, nl+1):
 
         ax.plot(br_pfsspy[:, 15], label='pfsspy')
         ax.plot(br_actual[:, 15], label='analytic')
-        ax.legend()
-        ax.yaxis.set_major_locator(mticker.NullLocator())
+        if l == 1 and m == 0:
+            ax.xaxis.set_major_formatter(mticker.StrMethodFormatter('{x}°'))
+            ax.xaxis.set_ticks([0, 90, 180])
+            ax.xaxis.tick_top()
+            ax.spines['top'].set_visible(True)
         ax.set_xlim(0, 180)
         ax.axhline(0, linestyle='--', linewidth=0.5, color='black')
 
 
+axs.fig.savefig(figdir / 'harmonic_comparison.pdf', bbox_inches='tight')
 plt.show()

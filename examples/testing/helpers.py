@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import astropy.units as u
 import matplotlib.colors as mcolor
 import matplotlib.ticker as mticker
@@ -10,7 +12,7 @@ from sympy.abc import x
 import pfsspy.utils
 import pfsspy.analytic as analytic
 
-
+figdir = Path('/Users/dstansby/Dropbox/Work/Papers/20PFSSTest/figs')
 pi = np.pi * u.rad
 
 
@@ -193,9 +195,9 @@ class LMAxes:
                     ax.spines[spine].set_visible(False)
 
                 if l == nl:
-                    ax.set_xlabel(str(m))
+                    ax.set_xlabel(f'm = {m}')
                 if m == -l:
-                    ax.set_ylabel(str(l), rotation=45)
+                    ax.set_ylabel(f'l = {l}')
 
     def grid_idx(self, l, m):
         return l-1, m+self.nl

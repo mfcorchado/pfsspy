@@ -26,7 +26,7 @@ from helpers import pffspy_output, fr, theta_fline_coords, phi_fline_coords
 # Compare the the pfsspy solution to the analytic solutions. Cuts are taken
 # on the source surface at a constant phi value to do a 1D comparison.
 l = 3
-m = -2
+m = 3
 nphi = 360
 ns = 180
 nr = 40

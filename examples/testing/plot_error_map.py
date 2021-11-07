@@ -22,7 +22,7 @@ quantity_support()
 # Compare the the pfsspy solution to the analytic solutions. Cuts are taken
 # on the source surface at a constant phi value to do a 1D comparison.
 l = 3
-m = 2
+m = 3
 nphi = 360
 ns = 180
 nr = 40
@@ -89,10 +89,6 @@ def plot_map(field, ax, label, title):
     kwargs = dict(cmap='RdBu', vmin=-0.5, vmax=0.5, shading='nearest', edgecolors='face')
     im = ax.pcolormesh(phi.to_value(u.deg), np.sin(theta).value,
                        field, **kwargs)
-    ax.contour(phi.to_value(u.deg), np.sin(theta).value,
-               field,
-               levels=[-0.4, -0.3, -0.2, -0.1, 0.1, 0.2, 0.3, 0.4],
-               colors='black', alpha=0.5, linewidths=1)
     ax.set_aspect(360 / 4)
     fig.colorbar(im, aspect=10, ax=ax,
                  label=label)

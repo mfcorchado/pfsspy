@@ -4,25 +4,48 @@ Open flux
 Comparing total unsigned flux to analytic solutions. This is done as a function
 of the number of radial grid cells used in the PFSS calculation.
 """
+import matplotlib.ticker as mticker
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from helpers import LMAxes, figdir
+
 df = pd.read_csv('results/open_flux_results.csv', index_col=0)
+axs = LMAxes(nl=5)
 
-for lm in lms:
-    l = lm // 10
-    m = lm % 10
-    color = {1: 'tab:blue', 2: 'tab:orange', 3: 'tab:green'}[l]
-    marker = {0: 'o', 1: 10, 2: 11}[m]
-    ax.plot(nrhos, df[str(lm)],
-            marker=marker, color=color,
-            label=f'l={l}, m={m}')
+for lm in df.columns:
+    l = int(lm[0])
+    m = int(lm[1:])
+    ax = axs[l, m]
+    ax.plot(df.index, df[lm])
 
-ax.legend()
-ax.set_ylim(1)
-ax.set_xlim(8)
-ax.yaxis.grid(linestyle='--')
-ax.set_xlabel('$n_{r}$')
-ax.set_ylabel(r'$\Phi_{pfsspy} / \Phi_{analytic}$')
+    for lm1 in df.columns:
+        if lm1 != lm:
+            ax.plot(df.index, df[lm1], linewidth=1, alpha=0.1, color='black')
+
+    for x in [10, 30, 50]:
+        ax.axvline(x, color='black', linestyle='--', linewidth=1, alpha=0.2)
+    for y in [1, 1.05, 1.1]:
+        ax.axhline(y, color='black', linestyle='--', linewidth=1, alpha=0.2)
+    ax.set_ylim(0.99, 1.11)
+
+    if l == 1 and m == 1:
+        ax.xaxis.set_ticks([10, 30, 50])
+        ax.xaxis.tick_top()
+        ax.set_xlabel(r'$n_{r}$')
+        ax.xaxis.set_label_position('top')
+        ax.xaxis.set_major_formatter(mticker.ScalarFormatter())
+
+        ax.yaxis.set_ticks([1, 1.05, 1.1])
+        ax.yaxis.tick_right()
+        ax.set_ylabel(r'$\frac{\Phi_{pfsspy}}{\Phi_{analytic}}$',
+                      rotation=0, labelpad=30, fontsize=16, loc='center')
+        ax.yaxis.set_label_position('right')
+        ax.yaxis.set_major_formatter(mticker.ScalarFormatter())
+
+        ax.spines['top'].set_visible(True)
+        ax.spines['right'].set_visible(True)
+
+axs.fig.savefig(figdir / 'open_flux_nr.pdf', bbox_inches='tight')
 plt.show()

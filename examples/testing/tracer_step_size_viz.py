@@ -12,7 +12,7 @@ from matplotlib.gridspec import GridSpec
 import pandas as pd
 import numpy as np
 
-from helpers import LMAxes
+from helpers import LMAxes, figdir
 
 
 nl = 3
@@ -60,5 +60,5 @@ for l in range(1, nl+1):
                 ax.yaxis.set_ticks([], minor=minor)
 
 
-axs.fig.savefig(f'figs/tracer_step_size.pdf', bbox_inches='tight')
+axs.fig.savefig(figdir / 'tracer_step_size.pdf', bbox_inches='tight')
 plt.show()
